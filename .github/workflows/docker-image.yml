@@ -39,7 +39,7 @@ jobs:
     - name: Run backend tests
       run: npm test
       working-directory: ./ec2
-deploy:
+ deploy:
   needs: [frontend-test, backend-test]
   runs-on: ubuntu-latest
   if: github.ref == 'refs/heads/main'  # Ensure we're on the main branch
