@@ -78,9 +78,8 @@ jobs:
               echo "Application failed to start"
               exit 1
             fi
-
-            # Example: Kill the process 
-            pkill -f "node"
+ 
+            killall node
 
             # Exit from the EC2 instance
             exit
