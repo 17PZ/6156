@@ -60,17 +60,19 @@ jobs:
         run: |
           ssh -o "StrictHostKeyChecking=no" ec2-user@$EC2_PUBLIC_IP << 'EOF'
             # Commands to pull code, start microservice, check if it's working, and then clean up
-            # Replace these with the actual commands for your application
+            cd ~/6156/ec2
 
             # Example: Pull the latest code from the repository
             git pull origin main
+            # Install any new dependencies
+            npm install
 
             # Example: Start the microservice (replace with your actual service start command)
             npm start &
 
             # Example: Health check using curl (replace with your actual health check command)
             sleep 10
-            curl http://localhost:8080/
+            curl http://localhost:8080/ || exit 1
 
             # Example: Kill the process (replace with your actual cleanup commands)
             pkill -f "npm"
