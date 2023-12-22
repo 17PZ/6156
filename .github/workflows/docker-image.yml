@@ -39,46 +39,42 @@ jobs:
     - name: Run backend tests
       run: npm test
       working-directory: ./ec2
-deploy:
-  needs: [frontend-test, backend-test]
-  runs-on: ubuntu-latest
-  if: github.ref == 'refs/heads/main' # Ensure we're on the main branch
+  deploy:
+    needs: [frontend-test, backend-test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # Ensure we're on the main branch
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install SSH Client
+        run: sudo apt-get update && sudo apt-get install -y openssh-client
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-agent -s
+          ssh-add ~/.ssh/id_rsa
+      - name: Deploy to EC2
+        env:
+          EC2_PUBLIC_IP: "18.119.120.49" # Your EC2 instance's public IP address
+        run: |
+          ssh -o "StrictHostKeyChecking=no" ubuntu@$EC2_PUBLIC_IP << 'EOF'
+            # Commands to pull code, start microservice, check if it's working, and then clean up
+            # Replace these with the actual commands for your application
 
-  steps:
-    - uses: actions/checkout@v2
+            # Example: Pull the latest code from the repository
+            git pull origin main
 
-    - name: Install SSH Client
-      run: sudo apt-get update && sudo apt-get install -y openssh-client
+            # Example: Start the microservice (replace with your actual service start command)
+            npm start &
 
-    - name: Setup SSH Key
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-agent -s
-        ssh-add ~/.ssh/id_rsa
+            # Example: Health check using curl (replace with your actual health check command)
+            sleep 10
+            curl http://localhost:8080/
 
-    - name: Deploy to EC2
-      env:
-        EC2_PUBLIC_IP: "18.119.120.49" # Your EC2 instance's public IP address
-      run: |
-        ssh -o "StrictHostKeyChecking=no" ubuntu@$EC2_PUBLIC_IP << 'EOF'
-          # Commands to pull code, start microservice, check if it's working, and then clean up
-          # Replace these with the actual commands for your application
+            # Example: Kill the process (replace with your actual cleanup commands)
+            pkill -f "npm"
 
-          # Example: Pull the latest code from the repository
-          git pull origin main
-
-          # Example: Start the microservice (replace with your actual service start command)
-          npm start &
-
-          # Example: Health check using curl (replace with your actual health check command)
-          sleep 10
-          curl http://localhost:8080/
-
-          # Example: Kill the process (replace with your actual cleanup commands)
-          pkill -f "npm"
-
-          # Exit from the EC2 instance
-          exit
-        EOF
+            # Exit from the EC2 instance
+            exit
+          EOF
