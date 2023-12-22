@@ -67,15 +67,20 @@ jobs:
             # Install any new dependencies
             npm install
 
-            # Example: Start the microservice (replace with your actual service start command)
-            npm start &
+            # Example: Start the microservice 
+            nohup npm start > app.log 2>&1 &
 
-            # Example: Health check using curl (replace with your actual health check command)
+            # Example: Health check using curl 
             sleep 10
-            curl http://localhost:8080/ || exit 1
+            if grep -q "Listening on" app.log; then
+              echo "Application started successfully"
+            else
+              echo "Application failed to start"
+              exit 1
+            fi
 
-            # Example: Kill the process (replace with your actual cleanup commands)
-            pkill -f "npm"
+            # Example: Kill the process 
+            pkill -f "node"
 
             # Exit from the EC2 instance
             exit
